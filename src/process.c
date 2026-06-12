@@ -90,3 +90,10 @@ void* process_run(void* arg) {
 
     return NULL;
 }
+
+// Method to destroy a Process
+void process_destroy(Process* p) {
+
+    //Dealloco semplicemente la var. cond
+    pthread_cond_destroy(&p->cond);
+}

@@ -33,4 +33,7 @@ void* process_run(void* arg);
 // Process Builder Function
 void process_init(Process* p, int pid, int instructions);
 
+// Process Destroy Function
+void process_destroy(Process* p);
+
 #endif

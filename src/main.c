@@ -31,7 +31,7 @@ int main(void) {
     */
     for (int i=0; i<MAX_PROCESSES; i++) {
 
-        // Process builder function.
+        // Process builder
         process_init(&process_table[i], i, INITIAL_INSTRUCTIONS);
 
         // Creo il thread del Processo
@@ -60,7 +60,7 @@ int main(void) {
     for (int i=0; i<MAX_PROCESSES; i++) {
         pthread_cond_signal(&process_table[i].cond);
         pthread_join(process_table[i].thread, NULL);
-        pthread_cond_destroy(&process_table[i].cond);
+        process_destroy(&process_table[i]);
     }
 
     // Dealloco le risorse utilizzate
