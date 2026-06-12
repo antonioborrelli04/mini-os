@@ -1,9 +1,11 @@
 
 #include <pthread.h>
+#include <stdio.h>
 
 #include "../include/kernel.h"
 #include "../include/process.h"
 #include "../include/scheduler.h"
+#include "../include/mmu.h"
 
 // Dichiaro un array di processi (Process Table)
 Process process_table[MAX_PROCESSES];
@@ -66,6 +68,13 @@ int main(void) {
     // Dealloco le risorse utilizzate
     pthread_mutex_destroy(&kernel_lock);
     pthread_cond_destroy(&scheduler_cond);
+
+
+    // MMU DEBUG
+    int virtual_address = 515;
+    printf("\n[MMU TEST] virtual address = %d\n", virtual_address);
+    printf("[MMU TEST] page number = %d\n", mmu_get_page_number(virtual_address));
+    printf("[MMU TEST] offset = %d\n", mmu_get_offset(virtual_address));
 
     return 0;
 }

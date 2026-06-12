@@ -7,7 +7,7 @@
 #include "../include/kernel.h"
 
 // Searching the first ready process in the process_table;
-int find_next_ready_process(int start_index) {
+int scheduler_find_next_ready_process(int start_index) {
     for (int offset = 0; offset < MAX_PROCESSES; offset++) {
         int index = (start_index + offset) % MAX_PROCESSES;
 
@@ -17,6 +17,7 @@ int find_next_ready_process(int start_index) {
     }
     return -1;
 }
+
 
 // Implementing Scheduler Loop
 void* scheduler_loop(void* arg) {
@@ -38,7 +39,7 @@ void* scheduler_loop(void* arg) {
         }
 
         // Trovo il prossimo processo READY nella Process Table
-        int selected = find_next_ready_process(next_index);
+        int selected = scheduler_find_next_ready_process(next_index);
 
         /* Se la ricerca fallisce, faccio Unlock del mutex
                 e riavvio lo Scheduler Loop. 
