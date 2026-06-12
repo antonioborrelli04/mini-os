@@ -86,8 +86,8 @@ void* process_run(void* arg) {
             break;
         }
 
-        // Esegui tick del processo
-        process_execute_tick(p);
+        // Executes a quantum CPU tick
+        process_execute_quantum(p, CPU_QUANTUM);
 
         // Risveglio lo scheduler e Unlock sul mutex
         pthread_cond_signal(&scheduler_cond);
@@ -102,4 +102,19 @@ void process_destroy(Process* p) {
 
     //Dealloco semplicemente la var. cond
     pthread_cond_destroy(&p->cond);
+}
+
+/* Esegui al massimo un quantum tick,
+        ma se il processo termina prima, fermati
+*/
+void process_execute_quantum(Process* p, int quantum) {
+
+    for (int i=0; i<quantum; i++) {
+
+        if (p->state == TERMINATED) {
+            break;
+        }
+
+        process_execute_tick(p);
+    }
 }

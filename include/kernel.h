@@ -8,6 +8,8 @@
 #define MAX_PROCESSES 4
 #define INITIAL_INSTRUCTIONS 5
 
+#define CPU_QUANTUM 2
+
 extern Process process_table[MAX_PROCESSES];
 
 extern pthread_mutex_t kernel_lock;
