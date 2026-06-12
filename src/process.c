@@ -39,6 +39,9 @@ void process_execute_tick(Process* p) {
         p->instructions_left
     );
 
+    // Decremento il contatore del numero di istruzioni rimanenti
+    p->instructions_left--;
+
     /* Se il contatore delle istruzioni rimanenti si azzera
             impostiamo il ProcessState a TERMINATED e incrementiamo
             il contatore dei processi terminati.
@@ -60,9 +63,6 @@ void process_execute_tick(Process* p) {
             p->instructions_left
         );
     }
-
-    // Decremento il contatore del numero di istruzioni rimanenti
-    p->instructions_left--;
 }
 
 // Method to run a Process
