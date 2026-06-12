@@ -30,6 +30,38 @@ void process_init(Process* p, int pid, int instructions) {
     pthread_cond_init(&p->cond, NULL);
 }
 
+// Function Process executes for a single tick of scheduler
+void process_execute_tick(Process* p) {
+
+    // Logging...
+    printf("[PROCESS %d] executing instruction, remaining before = %d\n",
+        p->pid,
+        p->instructions_left
+    );
+
+    /* Se il contatore delle istruzioni rimanenti si azzera
+            impostiamo il ProcessState a TERMINATED e incrementiamo
+            il contatore dei processi terminati.
+    */
+    if (p->instructions_left <= 0) {
+        p->state = TERMINATED;
+        terminated_processes++;
+
+        printf("[PROCESS %d] TERMINATED\n", p->pid);
+    }
+
+    // Altrimenti imposta lo stato a READY  
+    else {
+        p->state = READY;
+
+        // Logging...
+        printf("[PROCESS %d] back to READY, remaining = %d\n",
+            p->pid,
+            p->instructions_left
+        );
+    }
+}
+
 // Method to run a Process
 void* process_run(void* arg) {
 
@@ -60,28 +92,8 @@ void* process_run(void* arg) {
         // Decremento il numero di istruzioni rimanenti per quel processo.
         p->instructions_left--;
 
-        /* Quando le istruzioni rimanenti del processo si azzerano,
-                Lo mettiamo in stato TERMINATO, incrementiamo il contatore
-                globale terminated_process e stampo Log.
-        */
-        if (p->instructions_left <= 0) {
-            p->state = TERMINATED;
-            terminated_processes++;
-
-            printf("[PROCESS %d] TERMINATED\n", p->pid);
-        }
-
-        /* In qualsiasi altro caso imposto lo stato del processo
-                a READY e stampo Log.
-        */
-        else {
-            p->state = READY;
-
-            printf("[PROCESS %d] back to READY, remaining = %d\n",
-                p->pid,
-                p->instructions_left
-            );
-        }
+        // Esegui tick del processo
+        process_execute_tick(p);
 
         // Risveglio lo scheduler e Unlock sul mutex
         pthread_cond_signal(&scheduler_cond);
