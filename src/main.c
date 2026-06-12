@@ -12,7 +12,7 @@ typedef enum {
     READY,
     RUNNING,
     BLOCKED,
-    TERMINATED,
+    TERMINATED
 
 } ProcessState;
 
@@ -36,7 +36,7 @@ pthread_mutex_t kernel_lock = PTHREAD_MUTEX_INITIALIZER;
 // Condition variable of the scheduler
 pthread_cond_t scheduler_cond = PTHREAD_COND_INITIALIZER;
 
-// Global counter to keep track of scheduler troughput
+// Global to keep track of terminated processes
 int terminated_process = 0;
 
 /*
@@ -191,9 +191,9 @@ void* scheduler_loop(void* arg) {
         next_index = (selected + 1) % MAX_PROCESSES;
 
         // Sblocco il Mutex
-        pthead_mutex_unlock(&kernel_lock);
+        pthread_mutex_unlock(&kernel_lock);
 
-        // Sleep di 2ms
+        // Sleep di 200 ms
         usleep(200000);
     }
 
@@ -242,10 +242,12 @@ int main(void) {
         NULL
     );
     
-    // Avvio lo Scheduler thread
+    // Attendo la terminazione dello scheduler thread
     pthread_join(scheduler_thread, NULL);
 
-    // Avvio i thread dei vari processi e faccio la una Signal sulla var cond
+    /* Risveglio eventuali processi ancora in attesa, attendo la
+            terminazione e distruggo le condition variable
+    */
     for (int i=0; i<MAX_PROCESSES; i++) {
         pthread_cond_signal(&process_table[i].cond);
         pthread_join(process_table[i].thread, NULL);
