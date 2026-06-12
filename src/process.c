@@ -21,6 +21,15 @@ const char* state_to_string(ProcessState state) {
     }
 }
 
+// Process builder function
+void process_init(Process* p, int pid, int instructions) {
+    p->pid = pid;
+    p->state = READY;
+    p->instructions_left = instructions;
+
+    pthread_cond_init(&p->cond, NULL);
+}
+
 // Method to run a Process
 void* process_run(void* arg) {
 
@@ -81,4 +90,3 @@ void* process_run(void* arg) {
 
     return NULL;
 }
-

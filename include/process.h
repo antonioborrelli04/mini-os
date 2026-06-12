@@ -24,7 +24,13 @@ typedef struct {
 
 } Process;
 
+// Method to get a string from a PROCESS STATE
 const char* state_to_string(ProcessState state);
+
+// Method to executing Processes
 void* process_run(void* arg);
+
+// Process Builder Function
+void process_init(Process* p, int pid, int instructions);
 
 #endif

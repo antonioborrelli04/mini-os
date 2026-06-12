@@ -6,7 +6,7 @@
 #include "process.h"
 
 #define MAX_PROCESSES 4
-#define INITIAL_INSTRUCTION 5
+#define INITIAL_INSTRUCTIONS 5
 
 extern Process process_table[MAX_PROCESSES];
 

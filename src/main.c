@@ -5,9 +5,6 @@
 #include "../include/process.h"
 #include "../include/scheduler.h"
 
-#define MAX_PROCESSES 4
-#define INITIAL_INSTRUCTIONS 5
-
 // Dichiaro un array di processi (Process Table)
 Process process_table[MAX_PROCESSES];
 
@@ -18,7 +15,7 @@ pthread_mutex_t kernel_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t scheduler_cond = PTHREAD_COND_INITIALIZER;
 
 // Global to keep track of terminated processes
-int terminated_process = 0;
+int terminated_processes = 0;
 
 // Starting Point
 int main(void) {
@@ -34,13 +31,8 @@ int main(void) {
     */
     for (int i=0; i<MAX_PROCESSES; i++) {
 
-        // Imposto gli attributi del processo nella process_table
-        process_table[i].pid = i;
-        process_table[i].state = READY;
-        process_table[i].instructions_left = INITIAL_INSTRUCTIONS;
-
-        // Inizializzo la var cond del processo
-        pthread_cond_init(&process_table[i].cond, NULL);
+        // Process builder function.
+        process_init(&process_table[i], i, INITIAL_INSTRUCTIONS);
 
         // Creo il thread del Processo
         pthread_create(
