@@ -30,7 +30,7 @@ void process_init(Process* p, int pid, int instructions) {
     pthread_cond_init(&p->cond, NULL);
 }
 
-// Function Process executes for a single tick of scheduler
+// Simulates one CPU tick executed by a process.
 void process_execute_tick(Process* p) {
 
     // Logging...
@@ -60,6 +60,9 @@ void process_execute_tick(Process* p) {
             p->instructions_left
         );
     }
+
+    // Decremento il contatore del numero di istruzioni rimanenti
+    p->instructions_left--;
 }
 
 // Method to run a Process
@@ -82,15 +85,6 @@ void* process_run(void* arg) {
             pthread_mutex_unlock(&kernel_lock);
             break;
         }
-
-        // Stampo Log
-        printf("[PROCESS %d] executing instruction, remaining before = %d\n",
-            p->pid,
-            p->instructions_left
-        );
-
-        // Decremento il numero di istruzioni rimanenti per quel processo.
-        p->instructions_left--;
 
         // Esegui tick del processo
         process_execute_tick(p);
