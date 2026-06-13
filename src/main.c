@@ -101,5 +101,15 @@ int main(void) {
     int result = handle_page_fault(&process_table[0], &RAM_MEMORY, 3);
     printf("[PAGE FALULT TEST] result = %d\n", result);
 
+    // MEMORY READ & WRITE DEBUG
+    result = memory_write(&process_table[0], &RAM_MEMORY, virtual_address, 3);
+    printf("[MEMORY_WRITE TEST] result = %d\n", result);
+
+    unsigned char value;
+
+    result =  memory_read(&process_table[0], &RAM_MEMORY, virtual_address, &value);
+    printf("[MEMORY_READ TEST] result = %d\n", result);
+    printf("value: %d\n", value);
+
     return 0;
 }

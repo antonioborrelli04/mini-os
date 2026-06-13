@@ -18,7 +18,6 @@ int scheduler_find_next_ready_process(int start_index) {
     return -1;
 }
 
-
 // Implementing Scheduler Loop
 void* scheduler_loop(void* arg) {
     (void) arg;
