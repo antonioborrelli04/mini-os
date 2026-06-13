@@ -72,9 +72,20 @@ int main(void) {
 
     // MMU DEBUG
     int virtual_address = 515;
+
+    // Creating and updating the PageTable
+    PageTable pt;
+    pt.entries[515].present = 1;
+
+    // Creating getting physical address...
+    int physical_address; 
+    mmu_translate(&pt, virtual_address, &physical_address);
+
+    // Logging...
     printf("\n[MMU TEST] virtual address = %d\n", virtual_address);
     printf("[MMU TEST] page number = %d\n", mmu_get_page_number(virtual_address));
     printf("[MMU TEST] offset = %d\n", mmu_get_offset(virtual_address));
+    printf("[MUU TEST] physical address = %d\n", physical_address);
 
     return 0;
 }

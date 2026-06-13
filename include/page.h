@@ -8,4 +8,18 @@
 #define MAX_PAGES 16
 #define MAX_FRAMES 8
 
+// PageTableEntry Struct
+typedef struct {
+    int page_number;
+    int frame_number;
+    int present;
+    int dirty;
+    int referenced;
+} PageTableEntry;
+
+// PageTable Struct
+typedef struct {
+    PageTableEntry entries[MAX_PAGES];
+} PageTable;
+
 #endif
