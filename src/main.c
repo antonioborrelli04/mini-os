@@ -75,7 +75,8 @@ int main(void) {
 
     // Creating and updating the PageTable
     PageTable pt;
-    pt.entries[515].present = 1;
+    pt.entries[2].present = 1;
+    pt.entries[2].frame_number = 7;
 
     // Creating getting physical address...
     int physical_address; 
