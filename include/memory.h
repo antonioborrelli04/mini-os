@@ -1,0 +1,30 @@
+
+#ifndef _MEMORY_H
+#define _MEMORY_H
+
+#define MEMORY_SIZE 4096
+
+#define FRAME_USED 1
+#define FRAME_FREE 0
+#define DIRTY 1
+#define CLEAN 0
+#define REFERENCED 1
+#define NOT_REFERENCED 0
+
+#include "process.h"
+#include "page.h"
+
+// Abstracting a physical memory
+typedef struct {
+    int frames[MAX_FRAMES];
+} PhysicalMemory;
+
+// Creating a global external memory space
+extern PhysicalMemory RAM_MEMORY;
+
+// Method Prototypes
+void memory_init(PhysicalMemory* mem);
+int memory_allocate_frame(PhysicalMemory* mem);
+int handle_page_fault(Process* p, PhysicalMemory* mem, int page_num);
+
+#endif

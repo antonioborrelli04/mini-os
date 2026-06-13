@@ -3,6 +3,7 @@
 #define _PROCESS_H
 
 #include <pthread.h>
+#include "page.h"
 
 // PROCESS STATE
 typedef enum {
@@ -21,6 +22,8 @@ typedef struct {
 
     pthread_cond_t cond;
     int instructions_left;
+
+    PageTable pt;
 
 } Process;
 

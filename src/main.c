@@ -6,6 +6,7 @@
 #include "../include/process.h"
 #include "../include/scheduler.h"
 #include "../include/mmu.h"
+#include "../include/memory.h"
 
 // Dichiaro un array di processi (Process Table)
 Process process_table[MAX_PROCESSES];
@@ -19,8 +20,14 @@ pthread_cond_t scheduler_cond = PTHREAD_COND_INITIALIZER;
 // Global to keep track of terminated processes
 int terminated_processes = 0;
 
+// Allocating simulated physical memory
+PhysicalMemory RAM_MEMORY;
+
 // Starting Point
 int main(void) {
+
+    // Inizializzo la memoria RAM
+    memory_init(&RAM_MEMORY);
 
     // Dichiaro un thread per lo Scheduler
     pthread_t scheduler_thread;
@@ -87,6 +94,12 @@ int main(void) {
     printf("[MMU TEST] page number = %d\n", mmu_get_page_number(virtual_address));
     printf("[MMU TEST] offset = %d\n", mmu_get_offset(virtual_address));
     printf("[MUU TEST] physical address = %d\n", physical_address);
+
+    // PAGE FAULT TEST
+
+    // process_table[0] ha pt non inizializzata -> present == 0
+    int result = handle_page_fault(&process_table[0], &RAM_MEMORY, 3);
+    printf("[PAGE FALULT TEST] result = %d\n", result);
 
     return 0;
 }

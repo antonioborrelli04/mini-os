@@ -3,6 +3,9 @@
 #ifndef _PAGE_H
 #define _PAGE_H
 
+#define PAGE_FREE 0
+#define PAGE_USED 1
+
 // Ogni pagina Virtuale contiene 256 byte
 #define PAGE_SIZE 256
 #define MAX_PAGES 16
