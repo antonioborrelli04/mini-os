@@ -39,6 +39,7 @@ void process_init(Process* p, int pid, int instructions);
 // Process Destroy Function
 void process_destroy(Process* p);
 
+// Process Execute Quantum Tick
 void process_execute_quantum(Process* p, int quantum);
 
 #endif

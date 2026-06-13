@@ -28,6 +28,10 @@ void memory_init(PhysicalMemory* mem);
 int memory_allocate_frame(PhysicalMemory* mem);
 int handle_page_fault(Process* p, PhysicalMemory* mem, int page_num);
 
+// Swapping & Page replacement algorithms
+int select_victim_fifo(Process* p);
+int replace_page_fifo(Process* p, PhysicalMemory* mem, int new_page);
+
 // Memory operation prototypes
 int memory_read(Process* p, PhysicalMemory* mem, int virtual_address, unsigned char* value);
 int memory_write(Process* p, PhysicalMemory* mem, int virtual_address, unsigned char value);

@@ -13,11 +13,17 @@
 
 // PageTableEntry Struct
 typedef struct {
+
+    // MEMORY FEATURES
     int page_number;
     int frame_number;
     int present;
     int dirty;
     int referenced;
+
+    // SCHEDULING FEATURES
+    int load_order;
+    
 } PageTableEntry;
 
 // PageTable Struct

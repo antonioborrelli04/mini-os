@@ -111,5 +111,13 @@ int main(void) {
     printf("[MEMORY_READ TEST] result = %d\n", result);
     printf("value: %d\n", value);
 
+    // FIFO Algorithm Test
+    for (int i=0; i<8; i++) {
+        handle_page_fault(&process_table[0], &RAM_MEMORY, i);
+    }
+
+    // Questo deve triggerare il FIFO replacement
+    handle_page_fault(&process_table[0], &RAM_MEMORY, 10);
+
     return 0;
 }

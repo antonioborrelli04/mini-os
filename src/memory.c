@@ -1,11 +1,15 @@
 
 #include <stdio.h>
 #include <pthread.h>
+#include <limits.h>
 
 #include "../include/memory.h"
 #include "../include/page.h"
 #include "../include/mmu.h"
 #include "../include/kernel.h"
+
+// Inizializzo un contatore per Page Fault
+static int load_counter = 0;
 
 // Memory init, imposto tutti i frame a 0
 void memory_init(PhysicalMemory* mem) {
@@ -44,20 +48,23 @@ int handle_page_fault(Process* p, PhysicalMemory* mem, int page_num) {
             FRAME_USED,
             CLEAN,
             NOT_REFERENCED,
+            0, // load_order
         };
 
         // Associo il frame_id al processo
         p->pt.entries[page_num] = new_entry;
+
+        // Incremento il contatore dei Page Fault
+        p->pt.entries[page_num].load_order = load_counter++;
 
         // Logging...
         printf("[PAGE FAULT] process %d, page %d\n", p->pid, page_num);
         return 0;
     }
 
-    // Altrimenti lancio un Segmentation fault
+    // Rimpiazzo la pagina allocata meno recentemente in memoria, con la nuova pagina
     else {
-        printf("[SEGMENTATION FAULT] process %d, page %d\n", p->pid, page_num);
-        return -1;
+        return replace_page_fifo(p, mem, page_num);
     }
 }
 
@@ -132,4 +139,47 @@ int memory_write(Process* p, PhysicalMemory* mem, int virtual_address, unsigned 
         // Riprova la scrittura dopo aver caricato la pagina
         return memory_write(p, mem, virtual_address, value);
     }
+}
+
+// Select Victim fifo swapping procedure
+int select_victim_fifo(Process* p) {
+
+    // Inizializzo una variabile per tenere traccia del minimo
+    int min_load_order = INT_MAX;
+
+    // Inizializzo una variabile che segue il page_num del minimo
+    int victim_page = -1;
+
+    // Scorro i record present all'interno della page table
+    for (int i=0; i<MAX_PAGES; i++) {
+
+        // Se il record è presente e il load order e minore del minimo...
+        if (p->pt.entries[i].present == 1 && p->pt.entries[i].load_order < min_load_order) {
+
+            // ...aggiorno il minimo e victim_page
+            min_load_order = p->pt.entries[i].load_order;
+            victim_page = i;
+        }
+    }
+
+    // Ritorno il numero di pagina del load_min
+    return victim_page;
+}
+
+// Method to replace a page with FIFO algorithm
+int replace_page_fifo(Process* p, PhysicalMemory* mem, int new_page) {
+    
+    // Seleziono la vittima
+    int page_id = select_victim_fifo(p);
+
+    // Libero il frame
+    int frame_id = p->pt.entries[page_id].frame_number;
+    mem->frames[frame_id] = FRAME_FREE;
+
+    // Libero il frame occupato dal processo nella physical memory
+    p->pt.entries[page_id].present = PAGE_FREE;
+
+    // Chiamo handle_page_fault per caricare la nuova pagina nel frame liberato
+    int result = handle_page_fault(p, mem, new_page);
+    return result;
 }
