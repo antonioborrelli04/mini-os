@@ -53,7 +53,7 @@ void swap_in(SwapSpace* swap, PhysicalMemory* mem, Process* p, int page_num) {
     // Cerco un frame libero in memoria principale e lo inizializzo
     int current_frame = 0;
     while (mem->frames[current_frame] == FRAME_USED && current_frame < MAX_FRAMES) {
-        current_frame = (current_frame + 1) % MAX_FRAMES;
+        current_frame++;
     } 
 
     if (current_frame == MAX_FRAMES) return;

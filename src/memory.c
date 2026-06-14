@@ -8,7 +8,6 @@
 #include "../include/mmu.h"
 #include "../include/kernel.h"
 #include "../include/swap.h"
-#include "../include/kernel.h"
 
 // Inizializzo un contatore per Page Fault
 static int load_counter = 0;
