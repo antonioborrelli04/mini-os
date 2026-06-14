@@ -11,6 +11,102 @@
 // Inizializzo un contatore per Page Fault
 static int load_counter = 0;
 
+// Memory Swapping Algorithms Procedure
+
+// Select Victim FIFO swapping procedure
+int select_victim_fifo(Process* p) {
+
+    // Inizializzo una variabile per tenere traccia del minimo
+    int min_load_order = INT_MAX;
+
+    // Inizializzo una variabile che segue il page_num del minimo
+    int victim_page = -1;
+
+    // Scorro i record present all'interno della page table
+    for (int i=0; i<MAX_PAGES; i++) {
+
+        // Se il record è presente e il load order e minore del minimo...
+        if (p->pt.entries[i].present == 1 && p->pt.entries[i].load_order < min_load_order) {
+
+            // ...aggiorno il minimo e victim_page
+            min_load_order = p->pt.entries[i].load_order;
+            victim_page = i;
+        }
+    }
+
+    // Ritorno il numero di pagina del load_min
+    return victim_page;
+}
+
+// Method to replace a page with FIFO algorithm
+int replace_page_fifo(Process* p, PhysicalMemory* mem, int new_page) {
+    
+    // Seleziono la vittima
+    int page_id = select_victim_fifo(p);
+
+    // Libero il frame
+    int frame_id = p->pt.entries[page_id].frame_number;
+    mem->frames[frame_id] = FRAME_FREE;
+
+    // Aggiorno il flag della pagina nella PageTable del processo
+    p->pt.entries[page_id].present = PAGE_FREE;
+
+    // Chiamo handle_page_fault per caricare la nuova pagina nel frame liberato
+    int result = handle_page_fault(p, mem, new_page);
+
+    // Operazione eseguita con successo + Log
+    if (result >= 0) {
+        printf("[FIFO REPLACEMENT] victim page = %d, new page = %d\n", page_id, new_page);
+        return 0;
+    }
+
+    return -1;
+}
+
+// Select Victim with Second Chance Algorithm
+int select_victim_second_chance(Process* p) {
+
+    // Prima passata: cerca pagina con referenced == 0
+    for (int i=0; i<MAX_PAGES; i++) {
+        if (p->pt.entries[i].present == 1 && p->pt.entries[i].referenced == NOT_REFERENCED) {
+            return i;
+        }
+    }
+
+    // Seconda passata: prendi la prima present
+    for (int i=0; i<MAX_PAGES; i++) {
+        if (p->pt.entries[i].present == 1) {
+            return i;
+        }
+    }
+
+    return -1; // nessuna pagina in RAM
+}
+
+// Method to replace a page with Second Chance Algorithm
+int replace_page_second_chance(Process* p, PhysicalMemory* mem, int new_page) {
+
+    // Seleziono la vittima
+    int page_num = select_victim_second_chance(p);
+
+    // Trovo il Frame Id e lo libero
+    int frame_id = p->pt.entries[page_num].frame_number;
+    mem->frames[frame_id] = FRAME_FREE;
+
+    // Aggiorno il flag della pagina nella page table del processo
+    p->pt.entries[page_num].present = PAGE_FREE;
+
+    // Genero un PageFault per forzare il caricamento della pagina richiesta in memoria
+    int result = handle_page_fault(p, mem, new_page);
+
+    if (result >= 0) {
+        printf("[SECOND_CHANCE REPLACEMENT] victim page = %d, new page = %d\n", page_num, new_page);
+        return 0;
+    }
+
+    return -1;
+}
+
 // Memory init, imposto tutti i frame a 0
 void memory_init(PhysicalMemory* mem) {
     for (int i=0; i<MAX_FRAMES; i++) {
@@ -62,9 +158,18 @@ int handle_page_fault(Process* p, PhysicalMemory* mem, int page_num) {
         return 0;
     }
 
-    // Rimpiazzo la pagina allocata meno recentemente in memoria, con la nuova pagina
+    // Se la memoria è piena scelgo una pagina vittima e la rimpiazzo
     else {
-        return replace_page_fifo(p, mem, page_num);
+
+        // FIFO REPLACEMENT
+        #if PAGE_REPLACEMENT_ALGO == 0
+            return replace_page_fifo(p, mem, page_num);
+
+        // SECOND CHANCE REPLACEMENT
+        #else
+            return replace_page_second_chance(p, mem, page_num);
+
+        #endif
     }
 }
 
@@ -77,6 +182,11 @@ int memory_read(Process* p, PhysicalMemory* mem, int virtual_address, unsigned c
 
     // Controllo se mmu_translate è andata a buon fine e leggo data
     if ( physical_address >= 0 && result >= 0) {
+
+        int page_num = (int) virtual_address / MAX_PAGES;
+
+        // Nel caso la traduzione è andata a buon fine
+        p->pt.entries[page_num].referenced = REFERENCED;
 
         // Calcolo il frame_id
         int frame_id = physical_address / PAGE_SIZE;
@@ -114,6 +224,12 @@ int memory_write(Process* p, PhysicalMemory* mem, int virtual_address, unsigned 
     // Se la MMU riesce a trovare il Frame corrispondente nella PageTable
     if (physical_address >= 0 && result >= 0) {
 
+        /* Nel caso la traduzione è andata a buon fine 
+            aggiorno il il flag referenced, che poi utilizzerà
+            l'algoritmo di swapping second chanche.
+        */
+        p->pt.entries[page_num].referenced = REFERENCED;
+
         // Calcolo il FrameID partendo dal physical address
         int frame_id = physical_address / PAGE_SIZE;
 
@@ -139,47 +255,4 @@ int memory_write(Process* p, PhysicalMemory* mem, int virtual_address, unsigned 
         // Riprova la scrittura dopo aver caricato la pagina
         return memory_write(p, mem, virtual_address, value);
     }
-}
-
-// Select Victim fifo swapping procedure
-int select_victim_fifo(Process* p) {
-
-    // Inizializzo una variabile per tenere traccia del minimo
-    int min_load_order = INT_MAX;
-
-    // Inizializzo una variabile che segue il page_num del minimo
-    int victim_page = -1;
-
-    // Scorro i record present all'interno della page table
-    for (int i=0; i<MAX_PAGES; i++) {
-
-        // Se il record è presente e il load order e minore del minimo...
-        if (p->pt.entries[i].present == 1 && p->pt.entries[i].load_order < min_load_order) {
-
-            // ...aggiorno il minimo e victim_page
-            min_load_order = p->pt.entries[i].load_order;
-            victim_page = i;
-        }
-    }
-
-    // Ritorno il numero di pagina del load_min
-    return victim_page;
-}
-
-// Method to replace a page with FIFO algorithm
-int replace_page_fifo(Process* p, PhysicalMemory* mem, int new_page) {
-    
-    // Seleziono la vittima
-    int page_id = select_victim_fifo(p);
-
-    // Libero il frame
-    int frame_id = p->pt.entries[page_id].frame_number;
-    mem->frames[frame_id] = FRAME_FREE;
-
-    // Libero il frame occupato dal processo nella physical memory
-    p->pt.entries[page_id].present = PAGE_FREE;
-
-    // Chiamo handle_page_fault per caricare la nuova pagina nel frame liberato
-    int result = handle_page_fault(p, mem, new_page);
-    return result;
 }

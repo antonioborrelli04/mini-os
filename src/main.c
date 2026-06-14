@@ -119,5 +119,12 @@ int main(void) {
     // Questo deve triggerare il FIFO replacement
     handle_page_fault(&process_table[0], &RAM_MEMORY, 10);
 
+    // Second Chance Algorithm Test
+    for (int i=0; i<8; i++) {
+        handle_page_fault(&process_table[0], &RAM_MEMORY, i);
+    }
+
+    // Trigger Second Chance replacement
+    handle_page_fault(&process_table[0], &RAM_MEMORY, 10);
     return 0;
 }

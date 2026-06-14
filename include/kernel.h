@@ -8,6 +8,9 @@
 #define MAX_PROCESSES 4
 #define INITIAL_INSTRUCTIONS 5
 
+// 0 = FIFO, 1 = SECOND_CHANCE
+#define PAGE_REPLACEMENT_ALGO 1   
+
 #define CPU_QUANTUM 2
 
 extern Process process_table[MAX_PROCESSES];
