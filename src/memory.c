@@ -7,6 +7,8 @@
 #include "../include/page.h"
 #include "../include/mmu.h"
 #include "../include/kernel.h"
+#include "../include/swap.h"
+#include "../include/kernel.h"
 
 // Inizializzo un contatore per Page Fault
 static int load_counter = 0;
@@ -44,22 +46,29 @@ int replace_page_fifo(Process* p, PhysicalMemory* mem, int new_page) {
     // Seleziono la vittima
     int page_id = select_victim_fifo(p);
 
-    // Libero il frame
-    int frame_id = p->pt.entries[page_id].frame_number;
-    mem->frames[frame_id] = FRAME_FREE;
+    // Controllo se la pagina vittima è stata modificata
+    if (p->pt.entries[page_id].dirty == DIRTY) {
 
-    // Aggiorno il flag della pagina nella PageTable del processo
-    p->pt.entries[page_id].present = PAGE_FREE;
+        // ...in quel caso faccio uno swap_out
+        swap_out(&SWAP_SPACE, mem, p, page_id);
+    } else {
 
-    // Chiamo handle_page_fault per caricare la nuova pagina nel frame liberato
+        // Trovo il Frame corrispondente alla pagina vittima
+        int frame_id = p->pt.entries[page_id].frame_number;
+
+        // Lo libero
+        mem->frames[frame_id] = FRAME_FREE;
+
+        // Libero la pagina
+        p->pt.entries[page_id].present = PAGE_FREE;
+    }
+
+    // In entramb
     int result = handle_page_fault(p, mem, new_page);
-
-    // Operazione eseguita con successo + Log
     if (result >= 0) {
         printf("[FIFO REPLACEMENT] victim page = %d, new page = %d\n", page_id, new_page);
         return 0;
     }
-
     return -1;
 }
 
@@ -87,23 +96,31 @@ int select_victim_second_chance(Process* p) {
 int replace_page_second_chance(Process* p, PhysicalMemory* mem, int new_page) {
 
     // Seleziono la vittima
-    int page_num = select_victim_second_chance(p);
+    int page_id = select_victim_second_chance(p);
 
-    // Trovo il Frame Id e lo libero
-    int frame_id = p->pt.entries[page_num].frame_number;
-    mem->frames[frame_id] = FRAME_FREE;
+    // Controllo se la pagina vittima è stata modificata
+    if (p->pt.entries[page_id].dirty == DIRTY) {
 
-    // Aggiorno il flag della pagina nella page table del processo
-    p->pt.entries[page_num].present = PAGE_FREE;
+        // ...in quel caso faccio uno swap_out
+        swap_out(&SWAP_SPACE, mem, p, page_id);
+    } else {
 
-    // Genero un PageFault per forzare il caricamento della pagina richiesta in memoria
-    int result = handle_page_fault(p, mem, new_page);
+        // Trovo il Frame corrispondente alla pagina vittima
+        int frame_id = p->pt.entries[page_id].frame_number;
 
-    if (result >= 0) {
-        printf("[SECOND_CHANCE REPLACEMENT] victim page = %d, new page = %d\n", page_num, new_page);
-        return 0;
+        // Lo libero
+        mem->frames[frame_id] = FRAME_FREE;
+
+        // Libero la pagina
+        p->pt.entries[page_id].present = PAGE_FREE;
     }
 
+    // In entramb
+    int result = handle_page_fault(p, mem, new_page);
+    if (result >= 0) {
+        printf("[SECOND_CHANCE REPLACEMENT] victim page = %d, new page = %d\n", page_id, new_page);
+        return 0;
+    }
     return -1;
 }
 
@@ -132,6 +149,12 @@ int memory_allocate_frame(PhysicalMemory* mem) {
 // Richiedo il frame associato alla pagina del processo in memoria
 int handle_page_fault(Process* p, PhysicalMemory* mem, int page_num) {
 
+    // Se la pagina è già presente nello swap space
+    if (p->pt.entries[page_num].in_swap == SWAPPED) {
+        swap_in(&SWAP_SPACE, mem, p, page_num);
+        return 0;
+    }
+
     // Alloco un frame in memoria e ritorno frame_id
     int frame_id = memory_allocate_frame(mem);
 
@@ -145,6 +168,7 @@ int handle_page_fault(Process* p, PhysicalMemory* mem, int page_num) {
             CLEAN,
             NOT_REFERENCED,
             0, // load_order
+            PRESENT, 
         };
 
         // Associo il frame_id al processo
@@ -163,7 +187,7 @@ int handle_page_fault(Process* p, PhysicalMemory* mem, int page_num) {
 
         // FIFO REPLACEMENT
         #if PAGE_REPLACEMENT_ALGO == 0
-            return replace_page_fifo(p, mem, page_num);
+            return replace_page_fifo(p , mem, page_num);
 
         // SECOND CHANCE REPLACEMENT
         #else

@@ -7,6 +7,7 @@
 #include "../include/scheduler.h"
 #include "../include/mmu.h"
 #include "../include/memory.h"
+#include "../include/swap.h"
 
 // Dichiaro un array di processi (Process Table)
 Process process_table[MAX_PROCESSES];
@@ -22,6 +23,9 @@ int terminated_processes = 0;
 
 // Allocating simulated physical memory
 PhysicalMemory RAM_MEMORY;
+
+// Allocating simualted Swap Space
+SwapSpace SWAP_SPACE;
 
 // Starting Point
 int main(void) {

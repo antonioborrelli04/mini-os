@@ -23,6 +23,7 @@ typedef struct {
 
     // SCHEDULING FEATURES
     int load_order;
+    int in_swap;
     
 } PageTableEntry;
 
